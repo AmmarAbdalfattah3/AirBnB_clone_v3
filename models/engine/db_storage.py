@@ -54,6 +54,21 @@ class DBStorage:
     def new(self, obj):
         """add the object to the current database session"""
         self.__session.add(obj)
+    def get(self, cls, id):
+        """Retrieve one row depending on class name and id"""
+        if cls and id:
+            return self.__session.query(cls).filter_by(id=id).first()
+        return None
+
+    def count(self, cls=None):
+        """Return the number of rows in a table"""
+        if cls:
+            return self.__session.query(cls).count()
+        else:
+            count = 0
+            for c in [State, City, User, Place, Review, Amenity]:
+                count += self.__session.query(c).count()
+            return count
 
     def save(self):
         """commit all changes of the current database session"""
@@ -63,6 +78,7 @@ class DBStorage:
         """delete from the current database session obj if not None"""
         if obj is not None:
             self.__session.delete(obj)
+
 
     def reload(self):
         """reloads data from the database"""
