@@ -10,36 +10,33 @@ from models.state import State
 @app_views.route('/states', methods=['GET'], strict_slashes=False)
 def get_states():
     """Retrieves All states"""
-    states = storage.all()
-    return make_response(jsonify([state.to_dict() for
-                         state in states.values()]), 200)
+    states = storage.all(State).values()
+    return make_response(jsonify([state.to_dict() for state in states]), 200)
 
 
 @app_views.route('/states/<state_id>', methods=['GET'], strict_slashes=False)
 def get_state(state_id):
     """Retrieves a single state"""
-    state = storage.get('State', state_id)
+    state = storage.get(State, state_id)
     if not state:
         abort(404)
-    return make_response(jsonify({state.to_dict}), 200)
+    return make_response(jsonify(state.to_dict()), 200)
 
 
-@app_views.route('/states/<state_id>',
-                 methods=['DELETE'],
-                 strict_slashes=False)
+@app_views.route('/states/<state_id>', methods=['DELETE'], strict_slashes=False)
 def delete_state(state_id):
     """Deletes a specific state"""
-    state = storage.get('State', state_id)
+    state = storage.get(State, state_id)
     if not state:
         abort(404)
-    state.delete()
-    state.save()
+    storage.delete(state)
+    storage.save()
     return make_response(jsonify({}), 200)
 
 
 @app_views.route('/states', methods=['POST'], strict_slashes=False)
 def add_state():
-    """Creates a review state."""
+    """Creates a new state."""
     body = request.get_json()
     if not body:
         abort(400, 'Not a JSON')
@@ -47,14 +44,17 @@ def add_state():
         abort(400, 'Missing name')
     state = State(**body)
     storage.new(state)
-    storage.save
-    return make_response(jsonify(state.to_dict), 201)
+    storage.save()
+    return make_response(jsonify(state.to_dict()), 201)
 
 
 @app_views.route('/states/<state_id>', methods=['PUT'], strict_slashes=False)
 def update_state(state_id):
     """Updates a specific state."""
-    state = storage.get('State', state_id)
+    state = storage.get(State, state_id)
+    if not state:
+        abort(404)
+
     body = request.get_json()
     if not body:
         abort(400, 'Not a JSON')
